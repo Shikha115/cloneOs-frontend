@@ -1,0 +1,141 @@
+import { axios, authAxios } from './url.service';
+import { useAuthStore } from '../store/auth.store';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+// API prefix
+const prefix = '/auth';
+
+// Auth API functions
+export const authApi = {
+  // Login function
+  async function login(credentials) => {
+    return axios.post(`${prefix}/login`, credentials);
+
+  },
+
+  // Register function
+  async function register(userData) => {
+    return axios.post(`${prefix}/signup`, userData);
+  },
+
+  // Get profile function
+  async function  getProfile() => {
+    return authAxios.get(`${prefix}/profile`);
+  },
+};
+
+// Custom hook for login mutation
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+  const { setAuth, setLoading } = useAuthStore();
+
+  return useMutation({
+    mutationFn: authApi.login,
+    onMutate: () => {
+      setLoading(true);
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        const { user, token } = data.data;
+        setAuth(token, user);
+        
+        // Invalidate and refetch profile to ensure data consistency
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+      }
+    },
+    onError: (error) => {
+      console.error('Login failed:', error);
+    },
+    onSettled: () => {
+      setLoading(false);
+    },
+  });
+};
+
+// Custom hook for register mutation
+export const useRegister = () => {
+  const queryClient = useQueryClient();
+  const { setAuth, setLoading } = useAuthStore();
+
+  return useMutation({
+    mutationFn: authApi.register,
+    onMutate: () => {
+      setLoading(true);
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        const { user, token } = data.data;
+        setAuth(token, user);
+        
+        // Invalidate and refetch profile to ensure data consistency
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+      }
+    },
+    onError: (error) => {
+      console.error('Registration failed:', error);
+    },
+    onSettled: () => {
+      setLoading(false);
+    },
+  });
+};
+
+// Custom hook for logout
+export const useLogout = () => {
+  const { clearAuth } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  const logout = () => {
+    clearAuth();
+    queryClient.clear(); // Clear all queries
+    window.location.href = '/login';
+  };
+
+  return { logout };
+};
+
+// Query hook for user profile
+export const useProfile = () => {
+  const { isAuthenticated, setUser } = useAuthStore();
+
+  return useQuery({
+    queryKey: ['profile'],
+    queryFn: authApi.getProfile,
+    enabled: isAuthenticated,
+    retry: 1,
+    onSuccess: (data) => {
+      if (data.success) {
+        setUser(data.data);
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to fetch profile:', error);
+    },
+  });
+};
+
+// Legacy functions for backward compatibility
+export const login = authApi.login;
+export const register = authApi.register;
+export const getProfile = authApi.getProfile;
+
+export const logout = () => {
+  useLogout().logout();
+};
+
+// Utility functions for direct access
+export const getStoredUser = () => {
+  const { user } = useAuthStore.getState();
+  return user;
+};
+
+export const isAuthenticated = () => {
+  const { isAuthenticated } = useAuthStore.getState();
+  return isAuthenticated;
+};
+
+export const updateUserData = (userData) => {
+  const { setUser } = useAuthStore.getState();
+  setUser(userData);
+};
+
