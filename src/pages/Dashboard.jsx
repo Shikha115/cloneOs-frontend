@@ -261,7 +261,7 @@ const Dashboard = () => {
                 <Button
                   variant="ghost"
                   className="header-btn text-white hover:bg-white/10"
-                  // onClick={handleLogout}
+                  onClick={handleLogout}
                 >
                   <User className="w-4 h-4 mr-1" />
                   Account
