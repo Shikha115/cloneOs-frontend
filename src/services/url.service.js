@@ -2,13 +2,14 @@ import axios from 'axios';
 import { useAuthStore } from '../store/auth.store';
 
 
-export const base_url = process.env.BASE_URL || 'http://localhost:3000';
+export const base_url = "https://5af2fd0b0368.ngrok-free.app" ||process.env.BASE_URL || 'http://localhost:5000';
 
 
 export const axiosInstance = axios.create({
   baseURL: base_url,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
   },
 });
 

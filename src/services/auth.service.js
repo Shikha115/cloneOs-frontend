@@ -5,9 +5,9 @@ const prefix = '/auth';
 
 // Low-level API
 export const authApi = () => {
-  const login = (credentials) => axiosInstance.post(`${prefix}/login`, credentials);
-  const register = (userData) => axiosInstance.post(`${prefix}/signup`, userData);
-  const profile = () => authAxios.get(`${prefix}/profile`);
+  const login = async (credentials) => axiosInstance.post(`${prefix}/login`, credentials);
+  const register = async (userData) => axiosInstance.post(`${prefix}/signup`, userData);
+  const profile = async () => authAxios.get(`${prefix}/profile`);
   return { login, register, profile };
 };
 
@@ -22,11 +22,8 @@ export function useProfile(options = {}) {
   const { profile } = authApi();
   return useQuery({
     queryKey: ['auth', 'profile'],
-    enabled: false, // run manually (e.g., after login/register)
-    queryFn: async () => {
-      const res = await profile();
-      return res.data?.data ?? res.data;
-    },
+    enabled: false,
+    queryFn: () => profile().then(res => res.data?.data ?? res.data),
     ...options,
   });
 }
@@ -35,10 +32,7 @@ export function useLogin(options = {}) {
   const { login } = authApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (credentials) => {
-      const res = await login(credentials);
-      return res.data;
-    },
+    mutationFn: (credentials) => login(credentials).then(res => res.data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
       await queryClient.refetchQueries({ queryKey: ['auth', 'profile'] });
@@ -51,10 +45,7 @@ export function useRegister(options = {}) {
   const { register } = authApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (userData) => {
-      const res = await register(userData);
-      return res.data;
-    },
+    mutationFn: (userData) => register(userData).then(res => res.data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
       await queryClient.refetchQueries({ queryKey: ['auth', 'profile'] });

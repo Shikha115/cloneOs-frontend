@@ -1,43 +1,5 @@
 // Mock data for DCVerse Dashboard
 
-export const mockActors = [
-  {
-    id: 1,
-    name: "Salman Khan",
-    category: "Bollywood Celebrity",
-    price: 599,
-    credits: 599,
-    image: "https://i.pinimg.com/736x/3d/70/41/3d704151eebcdb14b129c0fead905fbb.jpg",
-    isLocked: false
-  },
-  {
-    id: 2,
-    name: "Rynaa",
-    category: "Virtual Influencer",
-    price: 399,
-    credits: 399,
-    image: "https://www.dcverse.in/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Frynaa.afeeaca4.png&w=640&q=75",
-    isLocked: false
-  },
-  {
-    id: 3,
-    name: "Ryan Reynolds",
-    category: "Action Hero", 
-    price: 9999,
-    credits: 9999,
-    image: "https://images.fandango.com/ImageRenderer/300/0/redesign/static/img/default_poster.png/0/images/masterrepository/performer%20images/560035/RyanReynolds-2019_r.jpg",
-    isLocked: false
-  },
-  {
-    id: 4,
-    name: "Charlize Theron",
-    category: "Actress",
-    price: 7999,
-    credits: 7999,
-    image: "https://assets.vogue.com/photos/64de53f4d9567128b7130c0d/master/w_2560%2Cc_limit/F607%2520J'ADORE%2520L'OR%2520M001ZH%2520Charlize%2520AVEC%2520PACK_L4_F39_CROP.jpg",
-    isLocked: false
-  }
-];
 
 export const mockLanguages = [
   { id: 1, name: "English", code: "en" },
