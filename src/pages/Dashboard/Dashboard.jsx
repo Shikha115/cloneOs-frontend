@@ -3,20 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { mockStoryboardFrames } from "../../components/mock";
 import DashboardHeader from "./components/DashboardHeader";
 import DashboardSidebar from "./components/DashboardSidebar";
+import ProjectSection from "./components/ProjectSection";
 import AvatarSection from "./components/AvatarSection";
 import UploadScriptSection from "./components/UploadScriptSection";
 import StoryboardSection from "./components/StoryboardSection";
 import VideoGenerationSection from "./components/VideoGenerationSection";
 
 const Dashboard = () => {
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedActors, setSelectedActors] = useState([]);
-  const [currentSection, setCurrentSection] = useState("select-avatar");
+  const [currentSection, setCurrentSection] = useState("select-project");
   const [storyboardFrames, setStoryboardFrames] =
     useState(mockStoryboardFrames);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
   const sectionRefs = {
+    "select-project": useRef(null),
     "select-avatar": useRef(null),
     "upload-script": useRef(null),
     storyboard: useRef(null),
@@ -49,6 +52,14 @@ const Dashboard = () => {
 
         {/* Main Content */}
         <main className="dashboard-main">
+          {/* Section 0: Select Project */}
+          <ProjectSection
+            sectionRef={sectionRefs["select-project"]}
+            selectedProjectId={selectedProjectId}
+            onSelectProject={(projectId) => setSelectedProjectId(projectId)}
+            onNext={() => scrollToSection("select-avatar")}
+          />
+
           {/* Section 1: Select Your Actor */}
           <AvatarSection
             sectionRef={sectionRefs["select-avatar"]}
@@ -59,13 +70,13 @@ const Dashboard = () => {
           {/* Section 2: Upload Script */}
           <UploadScriptSection
             sectionRef={sectionRefs["upload-script"]}
+            selectedProjectId={selectedProjectId}
             onFramesReady={(frames) => setStoryboardFrames(frames)}
           />
 
           {/* Section 3: Storyboard Generation */}
           <StoryboardSection
             sectionRef={sectionRefs["storyboard"]}
-            initialFrames={storyboardFrames}
             onFramesChange={(frames) => setStoryboardFrames(frames)}
             onProceed={() => scrollToSection('video-generation')}
           />

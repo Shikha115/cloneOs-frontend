@@ -1,30 +1,73 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Textarea } from '../../../components/ui/textarea';
 import { Upload, RefreshCw } from 'lucide-react';
 import { useToast } from '../../../hooks/use-toast';
-import { mockFunctions } from '../../../components/mock';
+import { useGenerateScript, useGenerateSketches } from '../../../services/project.service';
+import { useStoryboardStore } from '../../../store/storyboard.store';
 
-export default function UploadScriptSection({ sectionRef, onFramesReady }) {
+export default function UploadScriptSection({ sectionRef, onFramesReady, selectedProjectId }) {
   const { toast } = useToast();
   const [script, setScript] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [phase, setPhase] = useState('script'); // script -> storyboard
+  const { frames, setFrames } = useStoryboardStore();
+  const { mutateAsync: generateScript, isPending: generatingScript } = useGenerateScript();
+  const { mutateAsync: generateSketches, isPending: generatingSketches } = useGenerateSketches();
 
-  const handleGenerateStoryboard = async () => {
-    if (!script.trim()) {
-      toast({ title: 'Script Required', description: 'Please upload or paste your script first.', variant: 'destructive' });
+  const buttonLabel = useMemo(() => {
+    if (generatingScript || generatingSketches) return 'Generating...';
+    return phase === 'script' ? 'Generate Script' : 'Generate Storyboard';
+  }, [phase, generatingScript, generatingSketches]);
+
+  const handleGenerate = async () => {
+    if (!selectedProjectId) {
+      toast({ title: 'Select a project', description: 'Please choose a project before generating.', variant: 'destructive' });
       return;
     }
-    setIsGenerating(true);
+
+    if (phase === 'script') {
+      const prompt = script.trim() || 'xbjscm';
+      try {
+        const res = await generateScript({ projectId: selectedProjectId, prompt });
+        const scenes = res?.data ?? res?.scenes ?? res ?? [];
+        const frames = (scenes || []).map((scene, idx) => ({
+          id: scene.id || `scene-${idx}`,
+          scene: scene.scene || `Scene ${scene.sequenceOrder ?? idx + 1}`,
+          scriptText: scene.scriptText || scene.aiPrompt || 'No description',
+          sketchUrl: scene.sketchUrl || null,
+          status: scene.status || 'pending',
+          sequenceOrder: scene.sequenceOrder ?? idx + 1,
+          isLocked: false,
+        }));
+        setFrames(frames);
+        onFramesReady?.(frames);
+        toast({ title: 'Script generated', description: 'Click "Generate Storyboard" to fetch sketches.' });
+        setPhase('storyboard');
+      } catch (error) {
+        toast({ title: 'Generation failed', description: error?.message || 'Could not generate script.', variant: 'destructive' });
+      }
+      return;
+    }
+
+    // phase === storyboard
     try {
-      const result = await mockFunctions.generateStoryboard(script);
-      onFramesReady?.(result.frames);
-      toast({ title: 'Success', description: result.message });
+      const res = await generateSketches(selectedProjectId);
+      const scenes = res?.data ?? res?.scenes ?? res ?? [];
+      const frames = (scenes || []).map((scene, idx) => ({
+        id: scene.id || `scene-${idx}`,
+        scene: scene.scene || `Scene ${scene.sequenceOrder ?? idx + 1}`,
+        scriptText: scene.scriptText || scene.aiPrompt || 'No description',
+        sketchUrl: scene.sketchUrl || null,
+        status: scene.status || 'pending',
+        sequenceOrder: scene.sequenceOrder ?? idx + 1,
+        isLocked: false,
+      }));
+      setFrames(frames);
+      onFramesReady?.(frames);
+      toast({ title: 'Storyboard generated', description: 'Sketches updated.' });
     } catch (error) {
-      toast({ title: 'Generation Failed', description: 'Failed to generate storyboard. Please try again.', variant: 'destructive' });
-    } finally {
-      setIsGenerating(false);
+      toast({ title: 'Storyboard failed', description: error?.message || 'Could not generate storyboard.', variant: 'destructive' });
     }
   };
   return (
@@ -63,18 +106,21 @@ export default function UploadScriptSection({ sectionRef, onFramesReady }) {
           <div className="script-actions">
             <Button
               className="generate-storyboard-btn"
-              onClick={handleGenerateStoryboard}
-              disabled={isGenerating || !script.trim()}
+              onClick={handleGenerate}
+              disabled={generatingScript || generatingSketches}
             >
-              {isGenerating ? (
+              {(generatingScript || generatingSketches) ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Generating...
+                  {buttonLabel}
                 </>
               ) : (
-                'Generate Storyboard'
+                buttonLabel
               )}
             </Button>
+            {phase === 'storyboard' && !(generatingScript || generatingSketches) && (
+              <p className="text-xs text-gray-400 mt-2">Click "Generate Storyboard" to fetch sketches for these scenes.</p>
+            )}
           </div>
         </CardContent>
       </Card>

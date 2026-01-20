@@ -1,12 +1,13 @@
 import React from 'react';
-import { User, FileText, Film, Video } from 'lucide-react';
+import { FolderOpen, User, FileText, Film, Video } from 'lucide-react';
 
 export default function DashboardSidebar({ sidebarOpen, currentSection, scrollToSection }) {
   const sections = [
-    { id: 'select-avatar', title: '1. Select Avatar', icon: User },
-    { id: 'upload-script', title: '2. Upload Script', icon: FileText },
-    { id: 'storyboard', title: '3. Generate Storyboard', icon: Film },
-    { id: 'video-generation', title: '4. Create Video', icon: Video },
+    { id: 'select-project', title: '1. Select Project', icon: FolderOpen },
+    { id: 'select-avatar', title: '2. Select Avatar', icon: User },
+    { id: 'upload-script', title: '3. Upload Script', icon: FileText },
+    { id: 'storyboard', title: '4. Generate Storyboard', icon: Film },
+    { id: 'video-generation', title: '5. Create Video', icon: Video },
   ];
   return (
     <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
