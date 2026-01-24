@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { mockStoryboardFrames } from "../../components/mock";
 import DashboardHeader from "./components/DashboardHeader";
@@ -10,7 +10,6 @@ import StoryboardSection from "./components/StoryboardSection";
 import VideoGenerationSection from "./components/VideoGenerationSection";
 
 const Dashboard = () => {
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedActors, setSelectedActors] = useState([]);
   const [currentSection, setCurrentSection] = useState("select-project");
   const [storyboardFrames, setStoryboardFrames] =
@@ -55,8 +54,6 @@ const Dashboard = () => {
           {/* Section 0: Select Project */}
           <ProjectSection
             sectionRef={sectionRefs["select-project"]}
-            selectedProjectId={selectedProjectId}
-            onSelectProject={(projectId) => setSelectedProjectId(projectId)}
             onNext={() => scrollToSection("select-avatar")}
           />
 
@@ -70,7 +67,6 @@ const Dashboard = () => {
           {/* Section 2: Upload Script */}
           <UploadScriptSection
             sectionRef={sectionRefs["upload-script"]}
-            selectedProjectId={selectedProjectId}
             onFramesReady={(frames) => setStoryboardFrames(frames)}
           />
 

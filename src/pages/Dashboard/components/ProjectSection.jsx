@@ -17,16 +17,17 @@ import {
 } from "../../../services/project.service";
 import { useGetAllActors } from "../../../services/actor.service";
 import { useUser } from "../../../store/auth.store";
+import { useProjectStore, useSelectedProjectId } from "../../../store/project.store";
 import { useToast } from "../../../hooks/use-toast";
 
 export default function ProjectSection({
   sectionRef,
-  selectedProjectId,
-  onSelectProject,
   onNext,
 }) {
   const user = useUser();
   const { toast } = useToast();
+  const selectedProjectId = useSelectedProjectId();
+  const setSelectedProjectId = useProjectStore(state => state.setSelectedProjectId);
   const [createStep, setCreateStep] = useState(null);
   const [scriptText, setScriptText] = useState("");
   const [pendingActorId, setPendingActorId] = useState(null);
@@ -55,7 +56,7 @@ export default function ProjectSection({
   }, [projects, user]);
 
   const handleSelect = (projectId) => {
-    onSelectProject?.(projectId);
+    setSelectedProjectId(projectId);
     onNext?.();
   };
 

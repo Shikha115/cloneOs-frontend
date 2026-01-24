@@ -6,11 +6,13 @@ import { Upload, RefreshCw } from 'lucide-react';
 import { useToast } from '../../../hooks/use-toast';
 import { useGenerateScript, useGenerateSketches } from '../../../services/project.service';
 import { useStoryboardStore } from '../../../store/storyboard.store';
+import { useSelectedProjectId } from '../../../store/project.store';
 
-export default function UploadScriptSection({ sectionRef, onFramesReady, selectedProjectId }) {
+export default function UploadScriptSection({ sectionRef, onFramesReady }) {
   const { toast } = useToast();
+  const selectedProjectId = useSelectedProjectId();
   const [script, setScript] = useState('');
-  const [phase, setPhase] = useState('script'); // script -> storyboard
+  const [phase, setPhase] = useState('script');
   const { frames, setFrames } = useStoryboardStore();
   const { mutateAsync: generateScript, isPending: generatingScript } = useGenerateScript();
   const { mutateAsync: generateSketches, isPending: generatingSketches } = useGenerateSketches();

@@ -2,7 +2,7 @@ import axios from "axios";
 import { useAuthStore } from "../store/auth.store";
 
 export const base_url =
-  "https://80402f698a5a.ngrok-free.app" ||
+  "https://2d7c342f3851.ngrok-free.app" ||
   process.env.BASE_URL ||
   "http://localhost:5000";
 

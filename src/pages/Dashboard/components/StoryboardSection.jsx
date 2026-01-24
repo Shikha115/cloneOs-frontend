@@ -6,15 +6,73 @@ import { Badge } from '../../../components/ui/badge';
 import { Textarea } from '../../../components/ui/textarea';
 import { Film, Lock, Unlock, Loader, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useStoryboardStore, useStoryboardFrames } from '../../../store/storyboard.store';
-import { useRegenerateScene } from '../../../services/project.service';
+import { useSelectedProjectId } from '../../../store/project.store';
+import { useRegenerateScene, useGenerateImages } from '../../../services/project.service';
+import { useToast } from '../../../hooks/use-toast';
 
 export default function StoryboardSection({ sectionRef, onFramesChange, onProceed }) {
+  const projectId = useSelectedProjectId();
   const frames = useStoryboardFrames();
-  const { updateFrame } = useStoryboardStore();
+  const { updateFrame, setFrames } = useStoryboardStore();
+  const { toast } = useToast();
   const [selectedFrame, setSelectedFrame] = useState(null);
   const [regenerateFrame, setRegenerateFrame] = useState(null);
   const [regeneratePrompt, setRegeneratePrompt] = useState('');
-  const regenerateMutation = useRegenerateScene();
+  
+  const regenerateMutation = useRegenerateScene({
+    onSuccess: (response) => {
+      if (response?.data) {
+        const updatedFrame = response.data;
+        updateFrame(updatedFrame.id, {
+          sketchUrl: updatedFrame.sketchUrl,
+          finalImageUrl: updatedFrame.finalImageUrl,
+          aiPrompt: updatedFrame.aiPrompt,
+          scriptText: updatedFrame.scriptText,
+          status: updatedFrame.status,
+          sequenceOrder: updatedFrame.sequenceOrder,
+        });
+        toast({
+          title: "Scene regenerated",
+          description: "Successfully regenerated the scene.",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Regeneration failed",
+        description: error?.message || "Unable to regenerate scene",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const generateImagesMutation = useGenerateImages({
+    onSuccess: (response) => {
+      if (response?.data && Array.isArray(response.data)) {
+        response.data.forEach((updatedFrame) => {
+          updateFrame(updatedFrame.id, {
+            sketchUrl: updatedFrame.sketchUrl,
+            finalImageUrl: updatedFrame.finalImageUrl,
+            aiPrompt: updatedFrame.aiPrompt,
+            scriptText: updatedFrame.scriptText,
+            status: updatedFrame.status,
+            sequenceOrder: updatedFrame.sequenceOrder,
+          });
+        });
+        toast({
+          title: "Images generated",
+          description: `Successfully generated ${response.data.length} images.`,
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Generation failed",
+        description: error?.message || "Unable to generate images",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     onFramesChange?.(frames);
@@ -39,8 +97,8 @@ export default function StoryboardSection({ sectionRef, onFramesChange, onProcee
             <Card key={frame.id} className="storyboard-card">
               <CardContent className="storyboard-content">
                 <div className="frame-preview">
-                  {frame.sketchUrl ? (
-                    <img src={frame.sketchUrl} alt={frame.scene} />
+                  {frame.sketchUrl || frame.finalImageUrl ? (
+                    <img src={frame.finalImageUrl || frame.sketchUrl} alt={frame.scene} />
                   ) : (
                     <div className="frame-placeholder">
                       <Film className="w-8 h-8" />
@@ -67,7 +125,40 @@ export default function StoryboardSection({ sectionRef, onFramesChange, onProcee
         )}
       </div>
       <div className="storyboard-global-actions">
-        <Button variant="outline" className="regenerate-all-btn">AI Generate Images</Button>
+        <Button 
+          variant="outline" 
+          className="regenerate-all-btn"
+          onClick={() => {
+            if (!projectId) {
+              toast({
+                title: "No project selected",
+                description: "Please select a project first.",
+                variant: "destructive",
+              });
+              return;
+            }
+            
+            if (frames.length === 0) {
+              toast({
+                title: "No frames available",
+                description: "No frames available to generate images.",
+                variant: "destructive",
+              });
+              return;
+            }
+            
+            generateImagesMutation.mutate(projectId);
+          }}
+        >
+          {generateImagesMutation.isPending ? (
+            <>
+              <Loader className="w-4 h-4 mr-2 animate-spin" />
+              Generating Images...
+            </>
+          ) : (
+            'AI Generate Images'
+          )}
+        </Button>
         <Button className="proceed-video-btn" onClick={onProceed}>Proceed to Video</Button>
       </div>
 
