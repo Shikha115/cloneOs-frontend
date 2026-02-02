@@ -49,7 +49,7 @@ export default function VideoGenerationSection({ sectionRef, frames, actors }) {
         ))}
       </div>
       <div className="video-generation-section">
-        <Button className="generate-video-btn" disabled={!selectedVideoModel} onClick={handleGenerateVideo}>
+        <Button className="generate-video-btn" onClick={handleGenerateVideo}>
           {isGenerating ? (
             <>
               <RefreshCw className="w-4 h-4 animate-spin" />

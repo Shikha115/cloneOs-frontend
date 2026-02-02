@@ -1,29 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { Badge } from "../../../components/ui/badge";
-import { Card, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../../components/ui/badge";
+import { Card, CardContent } from "../../../../components/ui/card";
+import { Button } from "../../../../components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from "../../../../components/ui/select";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../components/ui/tabs";
-import { Input } from "../../../components/ui/input";
-import { User, RefreshCw, Lock, Unlock, Shirt } from "lucide-react";
-import { useToast } from "../../../hooks/use-toast";
-import { useGetAllActors } from "../../../services/actor.service";
+} from "../../../../components/ui/tabs";
+import { Input } from "../../../../components/ui/input";
+import { User, Lock, Unlock, Shirt } from "lucide-react";
+import { useToast } from "../../../../hooks/use-toast";
+import { useGetAllActors } from "../../../../services/actor.service";
+import { useProjectStore } from "../../../../store/project.store";
 import {
   mockVoiceStyles,
   mockLanguages,
   mockFunctions,
-} from "../../../components/mock";
+} from "../../../../components/mock";
+import AvatarSkeleton from "./Skeleton";
 
 export default function AvatarSection({
   sectionRef,
@@ -31,28 +33,49 @@ export default function AvatarSection({
   onNext,
 }) {
   const { toast } = useToast();
+  const { 
+    setSelectedActorId,
+    actors: cachedActors,
+    setActors,
+    actorsLastFetched,
+    isCacheFresh,
+  } = useProjectStore();
+  
+  const shouldFetch = !isCacheFresh(actorsLastFetched);
   const {
-    data: actors = [],
+    data: fetchedActors = [],
     isLoading: actorsLoading,
     error: actorsError,
-  } = useGetAllActors();
+  } = useGetAllActors({
+    enabled: shouldFetch,
+  });
+  
   const [selectedActors, setSelectedActors] = useState([]);
+  
+  useEffect(() => {
+    if (fetchedActors.length > 0) {
+      setActors(fetchedActors);
+    }
+  }, [fetchedActors, setActors]);
+  
+  const actors = cachedActors.length > 0 ? cachedActors : fetchedActors;
 
   useEffect(() => {
     onSelectionChange?.(selectedActors);
   }, [selectedActors, onSelectionChange]);
 
   const handleActorSelect = (actor) => {
-    if (selectedActors.length < 2) {
-      setSelectedActors([...selectedActors, { ...actor, isLocked: false }]);
+    if (selectedActors.length < 1) {
+      setSelectedActors([{ ...actor, isLocked: false }]);
+      setSelectedActorId(actor.id);
       toast({
         title: "Actor Selected",
         description: `${actor.name} has been added to your selection.`,
       });
     } else {
       toast({
-        title: "Maximum Actors Reached",
-        description: "You can select maximum 2 actors at a time.",
+        title: "Actor already selected",
+        description: "You can only select one actor for this project.",
         variant: "destructive",
       });
     }
@@ -68,6 +91,7 @@ export default function AvatarSection({
 
   const handleRemoveActor = (actorId) => {
     setSelectedActors((prev) => prev.filter((actor) => actor.id !== actorId));
+    setSelectedActorId(null);
   };
 
   const handleOutfitUpload = async (file, actorId) => {
@@ -106,6 +130,7 @@ export default function AvatarSection({
       });
     }
   };
+
   return (
     <section ref={sectionRef} className="dashboard-section">
       <div className="section-header">
@@ -117,10 +142,9 @@ export default function AvatarSection({
 
       <div className="actors-grid">
         {actorsLoading ? (
-          <div className="flex justify-center items-center col-span-full py-8">
-            <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-            <p>Loading actors...</p>
-          </div>
+          Array.from({ length: 4 }).map((_, idx) => (
+            <AvatarSkeleton key={idx} />
+          ))
         ) : actorsError ? (
           <div className="col-span-full text-center text-red-500 py-8">
             <p>Error loading actors. Please try again.</p>

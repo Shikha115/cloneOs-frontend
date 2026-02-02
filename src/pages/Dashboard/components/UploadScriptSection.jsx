@@ -4,57 +4,83 @@ import { Button } from '../../../components/ui/button';
 import { Textarea } from '../../../components/ui/textarea';
 import { Upload, RefreshCw } from 'lucide-react';
 import { useToast } from '../../../hooks/use-toast';
-import { useGenerateScript, useGenerateSketches } from '../../../services/project.service';
+import { useGenerateScript, useCreateProject } from '../../../services/project.service';
 import { useStoryboardStore } from '../../../store/storyboard.store';
-import { useSelectedProjectId } from '../../../store/project.store';
+import { useProjectStore, useSelectedProjectId, useSelectedActorId, useProjectName, useProjects } from '../../../store/project.store';
+import { useUser } from '../../../store/auth.store';
 
 export default function UploadScriptSection({ sectionRef, onFramesReady }) {
   const { toast } = useToast();
+  const user = useUser();
   const selectedProjectId = useSelectedProjectId();
+  const selectedActorId = useSelectedActorId();
+  const projectName = useProjectName();
+  const projects = useProjects();
+  const { setSelectedProjectId, addProject } = useProjectStore();
   const [script, setScript] = useState('');
-  const [phase, setPhase] = useState('script');
-  const { frames, setFrames } = useStoryboardStore();
+  const { frames, setFrames, setGeneratingScript } = useStoryboardStore();
+  const { mutateAsync: createProject, isPending: creatingProject } = useCreateProject();
   const { mutateAsync: generateScript, isPending: generatingScript } = useGenerateScript();
-  const { mutateAsync: generateSketches, isPending: generatingSketches } = useGenerateSketches();
+
+  // Get the selected project's existing script
+  const selectedProject = projects.find(p => p.id === selectedProjectId);
+  const existingScriptText = selectedProject?.scriptText || '';
 
   const buttonLabel = useMemo(() => {
-    if (generatingScript || generatingSketches) return 'Generating...';
-    return phase === 'script' ? 'Generate Script' : 'Generate Storyboard';
-  }, [phase, generatingScript, generatingSketches]);
+    if (creatingProject) return 'Creating Project...';
+    if (generatingScript) return 'Generating Script...';
+    return 'Generate Script';
+  }, [creatingProject, generatingScript]);
 
-  const handleGenerate = async () => {
-    if (!selectedProjectId) {
-      toast({ title: 'Select a project', description: 'Please choose a project before generating.', variant: 'destructive' });
+  const handleGenerateScript = async () => {
+    // Use existing script if available, otherwise use the script state
+    const prompt = script.trim() || existingScriptText;
+
+    if (!prompt) {
+      toast({ title: 'Script required', description: 'Please enter a script.', variant: 'destructive' });
       return;
     }
 
-    if (phase === 'script') {
-      const prompt = script.trim() || 'xbjscm';
-      try {
-        const res = await generateScript({ projectId: selectedProjectId, prompt });
-        const scenes = res?.data ?? res?.scenes ?? res ?? [];
-        const frames = (scenes || []).map((scene, idx) => ({
-          id: scene.id || `scene-${idx}`,
-          scene: scene.scene || `Scene ${scene.sequenceOrder ?? idx + 1}`,
-          scriptText: scene.scriptText || scene.aiPrompt || 'No description',
-          sketchUrl: scene.sketchUrl || null,
-          status: scene.status || 'pending',
-          sequenceOrder: scene.sequenceOrder ?? idx + 1,
-          isLocked: false,
-        }));
-        setFrames(frames);
-        onFramesReady?.(frames);
-        toast({ title: 'Script generated', description: 'Click "Generate Storyboard" to fetch sketches.' });
-        setPhase('storyboard');
-      } catch (error) {
-        toast({ title: 'Generation failed', description: error?.message || 'Could not generate script.', variant: 'destructive' });
-      }
+    const userId = user?.id ?? user?._id;
+    if (!userId) {
+      toast({ title: 'User not found', description: 'Please log in to create a project.', variant: 'destructive' });
       return;
     }
 
-    // phase === storyboard
     try {
-      const res = await generateSketches(selectedProjectId);
+      setGeneratingScript(true);
+      let newProjectId = selectedProjectId;
+
+      // Only create project if not already selected (when selecting project without script)
+      if (!newProjectId) {
+        if (!projectName) {
+          toast({ title: 'Project name missing', description: 'Please create a project first.', variant: 'destructive' });
+          setGeneratingScript(false);
+          return;
+        }
+
+        const createRes = await createProject({
+          userId,
+          actorId: selectedActorId,
+          projectName: projectName,
+        });
+
+        const newProject = createRes?.data;
+        newProjectId = newProject?.id;
+        if (!newProjectId) {
+          throw new Error('Project ID not returned from API');
+        }
+
+        addProject(newProject);
+        setSelectedProjectId(newProjectId);
+        toast({ title: 'Project created', description: 'Generating script...' });
+      } else {
+        toast({ title: 'Generating script...', description: 'Please wait while we process your project.' });
+      }
+
+      const res = await generateScript({ projectId: newProjectId, prompt });
+      setGeneratingScript(false);
+      
       const scenes = res?.data ?? res?.scenes ?? res ?? [];
       const frames = (scenes || []).map((scene, idx) => ({
         id: scene.id || `scene-${idx}`,
@@ -67,11 +93,13 @@ export default function UploadScriptSection({ sectionRef, onFramesReady }) {
       }));
       setFrames(frames);
       onFramesReady?.(frames);
-      toast({ title: 'Storyboard generated', description: 'Sketches updated.' });
+      toast({ title: 'Script generated', description: 'Now generate storyboard sketches from Storyboard section.' });
     } catch (error) {
-      toast({ title: 'Storyboard failed', description: error?.message || 'Could not generate storyboard.', variant: 'destructive' });
+      setGeneratingScript(false);
+      toast({ title: 'Generation failed', description: error?.message || 'Could not generate script.', variant: 'destructive' });
     }
   };
+
   return (
     <section ref={sectionRef} className="dashboard-section">
       <div className="section-header">
@@ -81,18 +109,6 @@ export default function UploadScriptSection({ sectionRef, onFramesReady }) {
       <Card className="script-card">
         <CardContent className="script-content">
           <div className="script-upload-area">
-            <div className="upload-zone">
-              <Upload className="w-8 h-8" />
-              <p>Drag & Drop your script file here</p>
-              <Button variant="outline" className="browse-files-btn">
-                Browse Files
-              </Button>
-            </div>
-
-            <div className="script-divider">
-              <span>OR</span>
-            </div>
-
             <div className="paste-script">
               <p>Paste your script directly:</p>
               <Textarea
@@ -108,10 +124,10 @@ export default function UploadScriptSection({ sectionRef, onFramesReady }) {
           <div className="script-actions">
             <Button
               className="generate-storyboard-btn"
-              onClick={handleGenerate}
-              disabled={generatingScript || generatingSketches}
+              onClick={handleGenerateScript}
+              disabled={creatingProject || generatingScript}
             >
-              {(generatingScript || generatingSketches) ? (
+              {(creatingProject || generatingScript) ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   {buttonLabel}
@@ -120,12 +136,10 @@ export default function UploadScriptSection({ sectionRef, onFramesReady }) {
                 buttonLabel
               )}
             </Button>
-            {phase === 'storyboard' && !(generatingScript || generatingSketches) && (
-              <p className="text-xs text-gray-400 mt-2">Click "Generate Storyboard" to fetch sketches for these scenes.</p>
-            )}
           </div>
         </CardContent>
       </Card>
     </section>
   );
 }
+

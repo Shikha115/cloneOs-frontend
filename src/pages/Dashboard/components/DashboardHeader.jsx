@@ -1,6 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../../components/ui/dropdown-menu';
 import { User, Menu, X } from 'lucide-react';
 import { useToast } from '../../../hooks/use-toast';
 import { useAuthStore } from '../../../store/auth.store';
@@ -21,20 +22,24 @@ export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
     navigate('/login');
   };
 
+  const handleMyProjects = () => {
+    navigate('/my-projects');
+  };
+
   const handleLoginRedirect = () => {
     navigate('/login');
   };
   return (
     <header className="dashboard-header">
       <div className="header-content">
-        <div className="logo-section">
+        <Link to="/" className="logo-section">
           <img
             src="https://customer-assets.emergentagent.com/job_5e208c76-5a6c-4a32-8918-b9a39e80d303/artifacts/mvzy74up_Logo%20%282%29.png"
             alt="DCVerse"
             className="logo"
           />
           <span className="logo-text">DCVERSE</span>
-        </div>
+        </Link>
         <div className="header-actions">
           {user ? (
             <>
@@ -45,14 +50,31 @@ export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
                   {user.creditsBalance} credits
                 </span>
               </div>
-              <Button
-                variant="ghost"
-                className="header-btn text-white hover:bg-white/10"
-                onClick={handleLogout}
-              >
-                <User className="w-4 h-4 mr-1" />
-                Account
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="header-btn text-white hover:bg-white/10"
+                  >
+                    <User className="w-4 h-4 mr-1" />
+                    Account
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-gray-900 border-gray-700 text-white">
+                  <DropdownMenuItem 
+                    onClick={handleMyProjects}
+                    className="cursor-pointer hover:bg-gray-800 focus:bg-gray-800 hover:text-white focus:text-white"
+                  >
+                    My Projects
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="cursor-pointer hover:bg-gray-800 focus:bg-gray-800 hover:text-white focus:text-white"
+                  >
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Button

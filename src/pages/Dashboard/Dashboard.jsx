@@ -1,20 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { mockStoryboardFrames } from "../../components/mock";
-import DashboardHeader from "./components/DashboardHeader";
 import DashboardSidebar from "./components/DashboardSidebar";
-import ProjectSection from "./components/ProjectSection";
-import AvatarSection from "./components/AvatarSection";
+import ProjectSection from "./components/projectSection/Section";
+import AvatarSection from "./components/avatarSection/Section";
 import UploadScriptSection from "./components/UploadScriptSection";
-import StoryboardSection from "./components/StoryboardSection";
+import StoryboardSection from "./components/StoryboardSection/Section";
 import VideoGenerationSection from "./components/VideoGenerationSection";
+import { useIsGeneratingScript } from "../../store/storyboard.store";
 
-const Dashboard = () => {
+const Dashboard = ({ sidebarOpen, setSidebarOpen }) => {
   const [selectedActors, setSelectedActors] = useState([]);
   const [currentSection, setCurrentSection] = useState("select-project");
   const [storyboardFrames, setStoryboardFrames] =
     useState(mockStoryboardFrames);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isGeneratingScript = useIsGeneratingScript();
   const navigate = useNavigate();
 
   const sectionRefs = {
@@ -35,12 +35,6 @@ const Dashboard = () => {
 
   return (
     <div className="dcverse-dashboard">
-      {/* Header */}
-      <DashboardHeader
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      />
-
       <div className="dashboard-layout">
         {/* Sidebar */}
         <DashboardSidebar
@@ -54,7 +48,13 @@ const Dashboard = () => {
           {/* Section 0: Select Project */}
           <ProjectSection
             sectionRef={sectionRefs["select-project"]}
-            onNext={() => scrollToSection("select-avatar")}
+            onNext={(targetSection) => {
+              if (targetSection === 'storyboard') {
+                scrollToSection('storyboard');
+              } else {
+                scrollToSection("select-avatar");
+              }
+            }}
           />
 
           {/* Section 1: Select Your Actor */}
@@ -75,6 +75,7 @@ const Dashboard = () => {
             sectionRef={sectionRefs["storyboard"]}
             onFramesChange={(frames) => setStoryboardFrames(frames)}
             onProceed={() => scrollToSection('video-generation')}
+            isGenerating={isGeneratingScript}
           />
 
           {/* Section 4: Video Generation */}
