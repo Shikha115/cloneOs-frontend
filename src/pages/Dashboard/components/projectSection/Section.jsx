@@ -1,7 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Card, CardContent } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
-import { Badge } from "../../../../components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -10,18 +8,17 @@ import {
   DialogDescription,
 } from "../../../../components/ui/dialog";
 import { Input } from "../../../../components/ui/input";
-import { RefreshCw, User } from "lucide-react";
 import {
   useGetAllProjects,
   useCreateProject,
   useGenerateScript,
 } from "../../../../services/project.service";
-import { useGetActorById } from "../../../../services/actor.service";
 import { useUser } from "../../../../store/auth.store";
 import { useProjectStore, useSelectedProjectId } from "../../../../store/project.store";
 import { useStoryboardStore } from "../../../../store/storyboard.store";
 import { useToast } from "../../../../hooks/use-toast";
 import ProjectSkeleton from "./Skeleton";
+import ProjectCard from "./ProjectCard";
 
 export default function ProjectSection({
   sectionRef,
@@ -52,7 +49,12 @@ export default function ProjectSection({
   
   useEffect(() => {
     if (fetchedProjects.length > 0) {
-      setProjects(fetchedProjects);
+      const sorted = [...fetchedProjects].sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+        const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+        return dateB - dateA;
+      });
+      setProjects(sorted);
     }
   }, [fetchedProjects, setProjects]);
 
@@ -63,26 +65,6 @@ export default function ProjectSection({
   }, []);
   
   const projects = cachedProjects.length > 0 ? cachedProjects : fetchedProjects;
-
-
-  const userProjects = useMemo(() => {
-    const list = Array.isArray(projects) ? projects : [];
-    const userId = user?.id ?? user?._id ?? user?.userId;
-    if (userId) {
-      return list.filter((project) => project?.userId === userId);
-    }
-    return list;
-  }, [projects, user]);
-
-  const sortedProjects = useMemo(() => {
-    return [...userProjects]
-      .sort((a, b) => {
-        const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime();
-        const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime();
-        return dateB - dateA;
-      })
-      .slice(0, 8);
-  }, [userProjects]);
 
   const handleSelect = async (project) => {
     setSelectedProjectId(project.id);
@@ -196,7 +178,7 @@ export default function ProjectSection({
       );
     }
 
-    if (!sortedProjects || sortedProjects.length === 0) {
+    if (!projects || projects.length === 0) {
       return (
         <div className="col-span-full text-center text-gray-400 py-8">
           <p>No projects found for your account.</p>
@@ -204,7 +186,7 @@ export default function ProjectSection({
       );
     }
 
-    return sortedProjects.map((project) => (
+    return projects.slice(0, 8).map((project) => (
       <ProjectCard
         key={project.id}
         project={project}
@@ -271,59 +253,5 @@ export default function ProjectSection({
         </DialogContent>
       </Dialog>
     </section>
-  );
-}
-
-function ProjectCard({ project, selected, onSelect }) {
-  const { name: projectName, scriptText, status } = project || {};
-  const scriptPreview = scriptText?.trim()
-    ? scriptText.length > 80
-      ? `${scriptText.slice(0, 80)}...`
-      : scriptText
-    : "No script added yet.";
-
-  return (
-    <Card className={`actor-card ${selected ? "ring-2 ring-primary" : ""}`}>
-      <CardContent className="actor-card-content">
-        <ActorImageDisplay actorId={project.actorId} projectName={projectName} />
-
-        <div className="actor-info">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="actor-name">{projectName || "Untitled Project"}</h3>
-            <Badge variant="outline" className="text-[8px] rounded-sm px-2 py-0.5 border-orange-500 text-orange-500">
-              {status || "unknown"}
-            </Badge>
-          </div>
-
-          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-            {scriptPreview}
-          </p>
-        </div>
-
-        <Button
-          className="select-actor-btn"
-          variant={selected ? "default" : "outline"}
-          onClick={onSelect}
-          disabled={selected}
-        >
-          {selected ? "Selected" : "Select Project"}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ActorImageDisplay({ actorId, projectName }) {
-  const { data: actor } = useGetActorById(actorId);
-  const fallbackImage = "https://i.pinimg.com/736x/3d/70/41/3d704151eebcdb14b129c0fead905fbb.jpg";
-  const actorImage = actor?.avatarUrl || fallbackImage;
-
-  return (
-    <div className="actor-image">
-      <img
-        src={actorImage}
-        alt={projectName || "Project"}
-      />
-    </div>
   );
 }

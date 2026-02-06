@@ -1,13 +1,16 @@
 import React from 'react';
 import { FolderOpen, User, FileText, Film, Video } from 'lucide-react';
+import { useStoryboardFrames } from '@/store/storyboard.store';
 
 export default function DashboardSidebar({ sidebarOpen, currentSection, scrollToSection }) {
+  const frames = useStoryboardFrames();
+  const doesFramesExist = frames && frames.length > 0;
   const sections = [
     { id: 'select-project', title: '1. Select Project', icon: FolderOpen },
     { id: 'select-avatar', title: '2. Select Avatar', icon: User },
     { id: 'upload-script', title: '3. Upload Script', icon: FileText },
-    { id: 'storyboard', title: '4. Generate Storyboard', icon: Film },
-    { id: 'video-generation', title: '5. Create Video', icon: Video },
+      ...(doesFramesExist ? [{ id: 'storyboard', title: '4. Generate Storyboard', icon: Film }] : []),
+    { id: 'video-generation', title: `${doesFramesExist ? "5" : "4"}. Create Video`, icon: Video },
   ];
   return (
     <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>

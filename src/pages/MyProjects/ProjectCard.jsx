@@ -39,7 +39,8 @@ export function ProjectCard({
               <div className="flex items-start gap-4 flex-1">
                 <ActorImage actorId={project.actorId} />
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white mb-2">{project.name || 'Untitled Project'}</h2>
+                  <h2 className="text-2xl font-bold text-white mb-2">{project.
+projectName || 'Untitled Project'}</h2>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="border-orange-500 text-orange-500 bg-orange-500/10">
                       {project.status || 'unknown'}

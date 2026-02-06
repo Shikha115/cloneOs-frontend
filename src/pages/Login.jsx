@@ -56,7 +56,7 @@ const Login = () => {
         title: "Success",
         description: result.message || "Login successful!",
       });
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setError(err?.response?.data?.message || "Login failed");
       toast({

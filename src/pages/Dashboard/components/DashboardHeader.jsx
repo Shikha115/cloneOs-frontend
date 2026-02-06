@@ -34,11 +34,11 @@ export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
       <div className="header-content">
         <Link to="/" className="logo-section">
           <img
-            src="https://customer-assets.emergentagent.com/job_5e208c76-5a6c-4a32-8918-b9a39e80d303/artifacts/mvzy74up_Logo%20%282%29.png"
+            src="/cloneOs.jpeg"
             alt="DCVerse"
-            className="logo"
+            className="h-auto w-[100px] object-contain"
           />
-          <span className="logo-text">DCVERSE</span>
+          {/* <span className="logo-text">DCVERSE</span> */}
         </Link>
         <div className="header-actions">
           {user ? (

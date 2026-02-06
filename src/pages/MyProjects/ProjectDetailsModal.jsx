@@ -46,20 +46,29 @@ export function ProjectDetailsModal({ project, open, onClose }) {
             {/* Project Name and Status */}
             <div>
               <h2 className="text-3xl font-bold text-white mb-3">
-                {project.name || 'Untitled Project'}
+                {project.
+projectName || "Untitled Project"}
               </h2>
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className={`${
-                  project.status === 'completed' 
-                    ? 'border-green-500 text-green-500 bg-green-500/10'
-                    : project.status === 'rendering'
-                    ? 'border-blue-500 text-blue-500 bg-blue-500/10'
-                    : 'border-orange-500 text-orange-500 bg-orange-500/10'
+                  project.status === "completed"
+                    ? "border-green-500 text-green-500 bg-green-500/10"
+                    : project.status === "rendering"
+                      ? "border-blue-500 text-blue-500 bg-blue-500/10"
+                      : "border-orange-500 text-orange-500 bg-orange-500/10"
                 }`}
               >
-                {project.status || 'unknown'}
+                {project.status || "unknown"}
               </Badge>
+             {project.storageUrl && <Badge
+                variant="outline"
+                className={`border-blue-500 text-blue-500 bg-blue-500/10 ml-2 cursor-pointer`}
+                 onClick={handleDownload}
+              >
+            Download
+              </Badge>
+            }
             </div>
 
             {/* Project Details */}
@@ -67,9 +76,13 @@ export function ProjectDetailsModal({ project, open, onClose }) {
               {/* Script Text */}
               {project.scriptText && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-300">Script</h3>
+                  <h3 className="text-sm font-semibold text-gray-300">
+                    Script
+                  </h3>
                   <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                    <p className="text-sm text-gray-300">{project.scriptText}</p>
+                    <p className="text-sm text-gray-300">
+                      {project.scriptText}
+                    </p>
                   </div>
                 </div>
               )}
@@ -77,23 +90,10 @@ export function ProjectDetailsModal({ project, open, onClose }) {
               {/* Video Download */}
               {project.storageUrl && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-300">Video</h3>
-                  <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Film className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-300">Final Video Available</span>
-                      </div>
-                      <Button
-                        onClick={handleDownload}
-                        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600"
-                        size="sm"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                  </div>
+                  <video className='w-full h-[250px]' controls>
+                    <source src={project.storageUrl} type="video/mp4" />
+                    Your browser does not support HTML video.
+                  </video>
                 </div>
               )}
             </div>

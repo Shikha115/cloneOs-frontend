@@ -212,14 +212,14 @@ export default function StoryboardSection({ sectionRef, onFramesChange, onProcee
 
   // Handle generate storyboard sketches
   const handleGenerateStoryboard = async () => {
-    // if (!projectId) {
-    //   toast({
-    //     title: 'No project selected',
-    //     description: 'Please select a project first.',
-    //     variant: 'destructive',
-    //   });
-    //   return;
-    // }
+    if (!projectId) {
+      toast({
+        title: 'No project selected',
+        description: 'Please select a project first.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     generateSketchesMutation.mutate(projectId);
   };
