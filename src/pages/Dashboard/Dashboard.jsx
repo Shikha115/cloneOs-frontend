@@ -8,8 +8,11 @@ import UploadScriptSection from "./components/UploadScriptSection";
 import StoryboardSection from "./components/StoryboardSection/Section";
 import VideoGenerationSection from "./components/VideoGenerationSection";
 import { useIsGeneratingScript } from "../../store/storyboard.store";
+import { useSidebarOpen } from "../../store/dashboard.store";
+import DashboardHeader from "./components/DashboardHeader";
 
-const Dashboard = ({ sidebarOpen, setSidebarOpen }) => {
+const Dashboard = () => {
+  const sidebarOpen = useSidebarOpen();
   const [selectedActors, setSelectedActors] = useState([]);
   const [currentSection, setCurrentSection] = useState("select-project");
   const [storyboardFrames, setStoryboardFrames] =
@@ -35,10 +38,10 @@ const Dashboard = ({ sidebarOpen, setSidebarOpen }) => {
 
   return (
     <div className="dcverse-dashboard">
+      <DashboardHeader />
       <div className="dashboard-layout">
         {/* Sidebar */}
         <DashboardSidebar
-          sidebarOpen={sidebarOpen}
           currentSection={currentSection}
           scrollToSection={scrollToSection}
         />

@@ -1,9 +1,11 @@
 import React from 'react';
 import { FolderOpen, User, FileText, Film, Video } from 'lucide-react';
 import { useStoryboardFrames } from '@/store/storyboard.store';
+import { useSidebarOpen } from '@/store/dashboard.store';
 
-export default function DashboardSidebar({ sidebarOpen, currentSection, scrollToSection }) {
+export default function DashboardSidebar({ currentSection, scrollToSection }) {
   const frames = useStoryboardFrames();
+  const sidebarOpen = useSidebarOpen();
   const doesFramesExist = frames && frames.length > 0;
   const sections = [
     { id: 'select-project', title: '1. Select Project', icon: FolderOpen },

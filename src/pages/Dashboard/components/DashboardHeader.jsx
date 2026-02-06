@@ -5,12 +5,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { User, Menu, X } from 'lucide-react';
 import { useToast } from '../../../hooks/use-toast';
 import { useAuthStore } from '../../../store/auth.store';
+import { useSidebarOpen, useToggleSidebar } from '../../../store/dashboard.store';
 import { logout } from '../../../services/auth.service';
 
-export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
+export default function DashboardHeader() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, clearAuth } = useAuthStore();
+  const sidebarOpen = useSidebarOpen();
+  const toggleSidebar = useToggleSidebar();
 
   const handleLogout = () => {
     clearAuth();
@@ -96,7 +99,7 @@ export default function DashboardHeader({ sidebarOpen, setSidebarOpen }) {
         <Button
           variant="ghost"
           className="mobile-menu-btn"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          onClick={toggleSidebar}
         >
           {sidebarOpen ? (
             <X className="w-6 h-6" />
